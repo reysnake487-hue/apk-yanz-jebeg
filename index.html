@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0878e8">
+<title>YANZ STORE</title>
+<style>
+:root{--blue:#0878e8;--dark:#07111f;--panel:#101f33;--line:#203753;--muted:#9db0c8}
+*{box-sizing:border-box}body{margin:0;background:var(--dark);color:#fff;font-family:Arial,sans-serif}
+header{padding:22px 18px 18px;background:linear-gradient(135deg,#063c78,#0878e8);text-align:center}
+header h1{margin:0;font-size:28px;letter-spacing:2px}header p{margin:7px 0 0;color:#dceeff;font-size:13px}
+nav{display:flex;gap:9px;padding:12px 14px;background:#0b192b;position:sticky;top:0;z-index:2}
+nav button{flex:1;background:#142943;color:#dceeff}
+main{max-width:760px;margin:auto;padding:16px}
+h2{font-size:19px;margin:10px 0 14px}.sub{color:var(--muted);font-size:13px;margin-top:-7px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h3{margin:2px 0 8px;font-size:16px}.category{font-size:11px;color:#8dc7ff;text-transform:uppercase}
+.price{font-weight:bold;color:#69b7ff;margin:10px 0}
+button{border:0;border-radius:9px;padding:11px 12px;background:var(--blue);color:white;font-weight:bold;cursor:pointer}
+button.secondary{background:#203753}button.danger{background:#a83242}
+.card button{width:100%}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#cartItems{color:#dce8f7;font-size:14px;line-height:1.8}
+input,select,textarea{width:100%;padding:12px;border-radius:9px;border:1px solid #36516f;background:#081525;color:white;margin:6px 0 12px}
+label{font-size:13px;color:#bfd0e4}
+.hidden{display:none!important}.actions{display:flex;gap:8px;margin-top:10px}.actions button{flex:1}
+footer{text-align:center;color:#7187a2;padding:24px;font-size:12px}
+.empty{color:var(--muted);font-size:14px}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>YANZ STORE</h1><p>TOP UP • AKUN GAME • ITEM ROBLOX</p></header>
+<nav>
+<button onclick="showSection('catalog')">Produk</button>
+<button onclick="showSection('cart')">Keranjang <span id="cartCount">0</span></button>
+<button class="secondary" onclick="openAdmin()">Admin</button>
+</nav>
+<main>
+<section id="catalog">
+<h2>🔥 Produk YANZ STORE</h2><p class="sub">Pilih produk, masukkan ke keranjang, lalu checkout lewat WhatsApp.</p>
+<div class="grid" id="products"></div>
+</section>
+<section id="cart" class="hidden">
+<h2>🛒 Keranjang Belanja</h2><div class="panel"><div id="cartItems" class="empty">Keranjang masih kosong.</div><hr style="border-color:#203753">
+<div class="row"><b>Total</b><b id="total">Rp0</b></div>
+<div class="actions"><button class="secondary" onclick="clearCart()">Kosongkan</button><button onclick="checkout()">Checkout WhatsApp</button></div></div>
+</section>
+<section id="admin" class="hidden">
+<h2>🔐 Admin YANZ STORE</h2>
+<div id="loginPanel" class="panel">
+<label>PIN Admin</label><input id="pin" type="password" inputmode="numeric" placeholder="Masukkan PIN">
+<button onclick="login()">Masuk</button>
+<p class="sub">Panel demo lokal. Ganti PIN di kode sebelum dipublikasikan.</p>
+</div>
+<div id="managePanel" class="panel hidden">
+<h3>Tambah Produk</h3>
+<label>Nama produk</label><input id="pname" placeholder="Contoh: Akun Roblox">
+<label>Kategori</label><select id="pcat"><option>Akun Game</option><option>Top Up</option><option>Item Game</option></select>
+<label>Harga (angka)</label><input id="pprice" type="number" placeholder="Contoh: 25000">
+<button onclick="addProduct()">Simpan Produk</button>
+<h3 style="margin-top:22px">Daftar Produk</h3><div id="adminProducts"></div>
+<div class="actions"><button class="secondary" onclick="logout()">Keluar Admin</button></div>
+</div>
+</section>
+</main>
+<footer>© YANZ STORE</footer>
+<script>
+const WA_NUMBER='62882000059866';
+const ADMIN_PIN='1234'; // Ganti PIN ini sebelum aplikasi dipublikasikan.
+let products=[
+{id:1,name:'Akun Roblox',category:'Akun Game',price:0},
+{id:2,name:'Top Up Robux',category:'Top Up',price:0},
+{id:3,name:'Item Roblox',category:'Item Game',price:0},
+{id:4,name:'Akun Game Premium',category:'Akun Game',price:0}
+];
+let cart=[];
+function rupiah(n){return n?new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n):'Hubungi Admin'}
+function renderProducts(){
+ document.getElementById('products').innerHTML=products.map(p=>`<article class="card"><div class="category">${esc(p.category)}</div><h3>${esc(p.name)}</h3><div class="price">${rupiah(p.price)}</div><button onclick="addCart(${p.id})">Tambah ke Keranjang</button></article>`).join('')||'<p class="empty">Belum ada produk.</p>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function addCart(id){let p=products.find(x=>x.id===id);if(p){cart.push({...p});renderCart();alert('Produk ditambahkan!')}}
+function renderCart(){
+ document.getElementById('cartCount').textContent=cart.length;
+ document.getElementById('cartItems').innerHTML=cart.length?cart.map((p,i)=>`${i+1}. ${esc(p.name)} — ${rupiah(p.price)} <button class="danger" style="padding:4px 8px" onclick="removeCart(${i})">Hapus</button>`).join('<br>'):'Keranjang masih kosong.';
+ document.getElementById('total').textContent=rupiah(cart.reduce((s,p)=>s+p.price,0));
+}
+function removeCart(i){cart.splice(i,1);renderCart()}
+function clearCart(){cart=[];renderCart()}
+function checkout(){
+ if(!cart.length){alert('Keranjang masih kosong!');return}
+ let sum=cart.reduce((s,p)=>s+p.price,0);
+ let msg='Halo YANZ STORE, saya mau pesan:%0A'+cart.map((p,i)=>`${i+1}. ${encodeURIComponent(p.name)} - ${encodeURIComponent(rupiah(p.price))}`).join('%0A')+'%0ATotal: '+encodeURIComponent(rupiah(sum));
+ location.href='https://wa.me/'+WA_NUMBER+'?text='+msg;
+}
+function showSection(id){['catalog','cart','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));if(id==='admin'&&sessionStorage.yanzAdmin==='1')showManage()}
+function openAdmin(){showSection('admin')}
+function login(){if(document.getElementById('pin').value===ADMIN_PIN){sessionStorage.yanzAdmin='1';showManage()}else alert('PIN salah')}
+function showManage(){document.getElementById('loginPanel').classList.add('hidden');document.getElementById('managePanel').classList.remove('hidden');renderAdmin()}
+function logout(){sessionStorage.removeItem('yanzAdmin');document.getElementById('loginPanel').classList.remove('hidden');document.getElementById('managePanel').classList.add('hidden')}
+function addProduct(){
+ let name=document.getElementById('pname').value.trim(),category=document.getElementById('pcat').value,price=Number(document.getElementById('pprice').value);
+ if(!name){alert('Isi nama produk dulu');return}
+ products.push({id:Date.now(),name,category,price});document.getElementById('pname').value='';document.getElementById('pprice').value='';renderProducts();renderAdmin();
+}
+function deleteProduct(id){products=products.filter(p=>p.id!==id);renderProducts();renderAdmin()}
+function renderAdmin(){document.getElementById('adminProducts').innerHTML=products.map(p=>`<div class="row" style="padding:8px 0;border-bottom:1px solid #203753"><span>${esc(p.name)}</span><button class="danger" onclick="deleteProduct(${p.id})">Hapus</button></div>`).join('')}
+renderProducts();renderCart();
+</script>
+</body></html>
