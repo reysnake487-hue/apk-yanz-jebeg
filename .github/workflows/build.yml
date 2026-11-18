@@ -1,4 +1,5 @@
 
+
 name: Build YANZ STORE APK
 
 'on':
@@ -8,20 +9,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Ambil repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Siapkan website
+      - name: Prepare website
         run: |
           mkdir -p www
           cp index.html www/index.html
@@ -34,9 +33,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Simpan APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: YANZ-STORE-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          
